@@ -4,6 +4,8 @@ package es.nmc.espublico.importorders.controller;
 import es.nmc.espublico.importorders.dto.PageOrderDTO;
 import es.nmc.espublico.importorders.dto.ResumenConteos;
 import es.nmc.espublico.importorders.service.OrderService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -28,6 +30,8 @@ public class OrderController {
     private OrderService orderService;
     private final int MAX_PER_PAGE = 1000;
 
+    private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
+
     @Autowired
     public OrderController(OrderService orderService) {
         this.orderService = orderService;
@@ -51,21 +55,29 @@ public class OrderController {
 
         // Bucle para procesar cada página de órdenes
         while (true) {
-            String url = generateUrl("/orders", currentPage, MAX_PER_PAGE);
-            ResponseEntity<PageOrderDTO> responseEntity = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), PageOrderDTO.class);
-            PageOrderDTO pageOrder = responseEntity.getBody();
+            try {
+                String url = generateUrl("/orders", currentPage, MAX_PER_PAGE);
+                ResponseEntity<PageOrderDTO> responseEntity = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), PageOrderDTO.class);
+                PageOrderDTO pageOrder = responseEntity.getBody();
+                if(currentPage==100){
+                    break;
+                }
+                if (pageOrder == null || pageOrder.getContent().isEmpty()) {
+                    // No hay más órdenes, salimos del bucle
+                    break;
+                }
 
-            if (pageOrder == null || pageOrder.getContent().isEmpty()) {
-                // No hay más órdenes, salimos del bucle
-                break;
+                // Procesar y guardar las órdenes en la base de datos de forma asíncrona
+                CompletableFuture<ResumenConteos> future = orderService.processOrdersInBatch(pageOrder.getContent());
+                futures.add(future);
+
+                totalOrdersProcessed += pageOrder.getContent().size();
+                currentPage++;
+            } catch(Exception e) {
+                e.printStackTrace();
+                // O bien, utiliza algún framework de logging para registrar el error en un archivo de logs
+                // logger.error("Error al procesar la página " + currentPage, e);
             }
-
-            // Procesar y guardar las órdenes en la base de datos de forma asíncrona
-            CompletableFuture<ResumenConteos> future = orderService.processOrdersInBatch(pageOrder.getContent());
-            futures.add(future);
-
-            totalOrdersProcessed += pageOrder.getContent().size();
-            currentPage++;
         }
 
         // Utilizar CompletableFuture.allOf para esperar a que todas las tareas finalicen
@@ -73,7 +85,7 @@ public class OrderController {
 
         allFutures.join(); // Esperar a que todas las tareas asíncronas hayan terminado
 
-      /*  // Realizar el merge de los conteos de todos los hilos
+        // Realizar el merge de los conteos de todos los hilos
         Map<String, Long> conteoTotalPorRegion = new ConcurrentHashMap<>();
         Map<String, Long> conteoTotalPorCountry = new ConcurrentHashMap<>();
         Map<String, Long> conteoTotalPorItemType = new ConcurrentHashMap<>();
@@ -101,18 +113,19 @@ public class OrderController {
         });
 
         // Imprimir el conteo total por regiones
-        System.out.println("-----Resumen Region-----");
-        conteoTotalPorRegion.forEach((region, conteo) -> System.out.println(region + ": " + conteo));
-        System.out.println("-----Resumen Country-----");
-        conteoTotalPorCountry.forEach((country, conteo) -> System.out.println(country + ": " + conteo));
-        System.out.println("-----Resumen ItemType-----");
-        conteoTotalPorItemType.forEach((itemType, conteo) -> System.out.println(itemType + ": " + conteo));
-        System.out.println("-----Resumen SalesChannel-----");
-        conteoTotalPorSalesChannel.forEach((salesChannel, conteo) -> System.out.println(salesChannel + ": " + conteo));
-        System.out.println("-----OrderPriority-----");
-        conteoTotalPorOrderPriority.forEach((orderPriority, conteo) -> System.out.println(orderPriority + ": " + conteo));
+        logger.info("-----Resumen Region-----");
+        conteoTotalPorRegion.forEach((region, conteo) -> logger.info(region + ": " + conteo));
+        logger.info("-----Resumen Country-----");
+        conteoTotalPorCountry.forEach((country, conteo) -> logger.info(country + ": " + conteo));
+        logger.info("-----Resumen ItemType-----");
+        conteoTotalPorItemType.forEach((itemType, conteo) -> logger.info(itemType + ": " + conteo));
+        logger.info("-----Resumen SalesChannel-----");
+        conteoTotalPorSalesChannel.forEach((salesChannel, conteo) -> logger.info(salesChannel + ": " + conteo));
+        logger.info("-----OrderPriority-----");
+        conteoTotalPorOrderPriority.forEach((orderPriority, conteo) -> logger.info(orderPriority + ": " + conteo));
+        orderService.leerExportar();
 
-*/
+
         long endTime = System.currentTimeMillis(); // Registro del tiempo final
         long totalTime = endTime - startTime;
 

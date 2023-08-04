@@ -1,6 +1,7 @@
 package es.nmc.espublico.importorders.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import es.nmc.espublico.importorders.util.Util;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -16,9 +17,9 @@ public class OrderDTO {
     @JsonProperty(value = "sales_channel")
     private String salesChannel;
     private PriorityEnum priority;
-    private String date;
+    private Date date;
     @JsonProperty(value = "ship_date")
-    private String shipDate;
+    private Date shipDate;
     @JsonProperty(value = "units_sold")
     private long unitsSold;
     @JsonProperty(value = "unit_price")
@@ -85,21 +86,26 @@ public class OrderDTO {
         this.priority = priority;
     }
 
-    public String getDate() {
+    public Date getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(Date date) {
         this.date = date;
     }
+    public void setDate(String dateString) {
+        this.date = Util.convertStringDDMMYYYYtoDate(dateString);
+    }
 
-    public String getShipDate() {
+
+    public Date getShipDate() {
         return shipDate;
     }
 
-    public void setShipDate(String shipDate) {
+    public void setShipDate(Date shipDate) {
         this.shipDate = shipDate;
     }
+    public void setShipDate(String dateShipString) { this.shipDate = Util.convertStringDDMMYYYYtoDate(dateShipString);}
 
     public long getUnitsSold() {
         return unitsSold;
@@ -147,17 +153,5 @@ public class OrderDTO {
 
     public void setTotalProfit(double totalProfit) {
         this.totalProfit = totalProfit;
-    }
-
-    // Métodos adicionales para convertir las fechas a objetos Date
-
-    public Date getParsedDate() throws ParseException {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        return sdf.parse(date);
-    }
-
-    public Date getParsedShipDate() throws ParseException {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        return sdf.parse(shipDate);
     }
 }

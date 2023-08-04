@@ -1,12 +1,13 @@
 package es.nmc.espublico.importorders.repository;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import es.nmc.espublico.importorders.dto.PriorityEnum;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+
+import java.util.Date;
 
 @Entity
 @Table(name = "orders") // Usamos "orders" en lugar de "order" para evitar problemas con palabras reservadas
@@ -20,8 +21,8 @@ public class Order {
     private String itemType;
     private String salesChannel;
     private PriorityEnum priority;
-    private String date;
-    private String shipDate;
+    private Date date;
+    private Date shipDate;
     private long unitsSold;
     private double unitPrice;
     private double unitCost;
@@ -34,7 +35,7 @@ public class Order {
 
     // Constructor con todos los atributos
     public Order(String uuid, String region, String country, String itemType, String salesChannel, PriorityEnum priority,
-                 String date, String shipDate, long unitsSold, double unitPrice, double unitCost,
+                 Date date, Date shipDate, long unitsSold, double unitPrice, double unitCost,
                  double totalRevenue, double totalCost, double totalProfit) {
         this.region = region;
         this.uuid = uuid;
@@ -106,19 +107,19 @@ public class Order {
         this.priority = priority;
     }
 
-    public String getDate() {
+    public Date getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(Date date) {
         this.date = date;
     }
 
-    public String getShipDate() {
+    public Date getShipDate() {
         return shipDate;
     }
 
-    public void setShipDate(String shipDate) {
+    public void setShipDate(Date shipDate) {
         this.shipDate = shipDate;
     }
 
