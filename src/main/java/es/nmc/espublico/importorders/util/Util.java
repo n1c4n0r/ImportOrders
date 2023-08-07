@@ -16,7 +16,7 @@ public class Util {
         try {
              date = dateFormat.parse(dateString);
         } catch (ParseException e) {
-            logger.error("Error al convertir la fecha: " + e.getMessage());
+            logger.error("Error al convertir la fecha: {}", e.getMessage());
         }
         return date;
     }

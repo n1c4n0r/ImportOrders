@@ -3,8 +3,6 @@ package es.nmc.espublico.importorders.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import es.nmc.espublico.importorders.util.Util;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class OrderDTO {

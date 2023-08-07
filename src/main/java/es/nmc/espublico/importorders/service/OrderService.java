@@ -1,7 +1,6 @@
 package es.nmc.espublico.importorders.service;
 
 import com.opencsv.CSVWriter;
-import es.nmc.espublico.importorders.controller.OrderController;
 import es.nmc.espublico.importorders.dto.OrderDTO;
 import es.nmc.espublico.importorders.dto.ResumenConteos;
 import es.nmc.espublico.importorders.repository.Order;
@@ -36,12 +35,12 @@ public class OrderService {
         try {
             List<Order> orders = orderDTOs.stream()
                     .map(this::convertToEntity)
-                    .collect(Collectors.toList());
+                    .toList();
             orderRepository.saveAll(orders);
 
             long endTime = System.currentTimeMillis(); // Registro del tiempo final
             long totalTime = endTime - startTime;
-            logger.info("Tiempo de procesamiento de lote: " + totalTime + " ms");
+            logger.info("Tiempo de procesamiento de lote: {} ms", totalTime);
 
 
             // Obtener los conteos por diferentes campos de este lote de órdenes
@@ -73,11 +72,6 @@ public class OrderService {
             return CompletableFuture.completedFuture(new ResumenConteos());
         }
     }
-
-/*    public Map<String, Long> obtenerConteoPorRegion(List<Order> orders) {
-        return orders.parallelStream()
-                .collect(Collectors.groupingByConcurrent(Order::getRegion, ConcurrentHashMap::new, Collectors.counting()));
-    }*/
 
     private Order convertToEntity(OrderDTO orderDTO) {
         Order order = new Order();
@@ -125,7 +119,7 @@ public class OrderService {
             // Escribe los datos de cada orden en el CSV
             for (Order order : orders) {
                 String[] data = {
-                        String.valueOf((Long) order.getId()),
+                        String.valueOf(order.getId()),
                         order.getPriority().name(),
                         Util.formatDateToString(order.getDate()),
                         order.getRegion(),
