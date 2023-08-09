@@ -27,15 +27,14 @@ public class OrderController {
     private static final String PARAMS = "{} : {}";
     private RestTemplate restTemplate;
     private HttpHeaders headers;
-    private OrderService orderService;
+    private final OrderService orderService;
     private static final int MAX_PER_PAGE = 1000;
-
     private static final Logger logger = LoggerFactory.getLogger(OrderController.class);
 
     @Autowired
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, RestTemplate restTemplate) {
         this.orderService = orderService;
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = restTemplate;
         this.headers = new HttpHeaders();
         this.headers.setContentType(MediaType.APPLICATION_JSON);
     }
@@ -47,27 +46,31 @@ public class OrderController {
     @GetMapping("/orders")
     public String importOrders() {
         long startTime = System.currentTimeMillis(); // Registro del tiempo inicial
+
         int currentPage = 1;
         int totalOrdersProcessed = 0;
         boolean continueProcessing = true;
 
         // Lista para almacenar los futuros generados por cada lote de órdenes
         List<CompletableFuture<ResumenConteos>> futures = new ArrayList<>();
+        try {
+            totalOrdersProcessed = getTotalOrdersProcessed(currentPage, totalOrdersProcessed, continueProcessing, futures);
 
-        totalOrdersProcessed = getTotalOrdersProcessed(currentPage, totalOrdersProcessed, continueProcessing, futures);
+            // Esperar a que todas las tareas finalicen(allof)
+            CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
 
-        // Utilizar CompletableFuture.allOf para esperar a que todas las tareas finalicen
-        CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+            allFutures.join();
 
-        allFutures.join(); // Esperar a que todas las tareas asíncronas hayan terminado
+            mergeThreadsAndPrint(futures);
 
-        mergeThreadsAndPrint(futures);
+            long endTime = System.currentTimeMillis(); // Registro del tiempo final
+            long totalTime = endTime - startTime;
 
-
-        long endTime = System.currentTimeMillis(); // Registro del tiempo final
-        long totalTime = endTime - startTime;
-
-        return "Se han procesado y guardado en la base de datos " + totalOrdersProcessed + " órdenes. Tiempo total: " + totalTime + " ms";
+            return "Se han procesado y guardado en la base de datos " + totalOrdersProcessed + " órdenes. Tiempo total: " + totalTime + " ms";
+        } catch (Exception e) {
+            logger.error("Error al importar orders", e);
+            return "Error al importar orders";
+        }
     }
 
     private int getTotalOrdersProcessed(int currentPage, int totalOrdersProcessed, boolean continueProcessing, List<CompletableFuture<ResumenConteos>> futures) {
@@ -88,8 +91,12 @@ public class OrderController {
                     totalOrdersProcessed += pageOrder.getContent().size();
                     currentPage++;
                 }
+            } catch(NullPointerException ne) {
+                logger.error("Error al procesar la página, no hay datos a procesar " + currentPage, ne);
+                continueProcessing = false;
             } catch(Exception e) {
                 logger.error("Error al procesar la página " + currentPage, e);
+                continueProcessing = false;
             }
         }
         return totalOrdersProcessed;
@@ -105,7 +112,6 @@ public class OrderController {
 
         futures.forEach(future -> {
             try {
-                // Puedes obtener los diferentes mapas de conteo desde la instancia de OrderCountResult
                 Map<String, Long> conteoPorRegion = future.get().getConteoPorRegion();
                 Map<String, Long> conteoPorCountry = future.get().getConteoPorCountry();
                 Map<String, Long> conteoPorItemType = future.get().getConteoPorItemType();
@@ -119,7 +125,7 @@ public class OrderController {
                 conteoPorOrderPriority.forEach((priorityEnum, conteo) -> conteoTotalPorOrderPriority.merge(priorityEnum, conteo, Long::sum));
 
             } catch(InterruptedException ie) {
-                logger.error("Error interrupción en los hilos en el resumen ", ie);
+                logger.error("Error interrupción en los hilos  del resumen ", ie);
                 Thread.currentThread().interrupt();
             } catch(Exception e) {
                 logger.error("Error al procesar el resumen ", e);

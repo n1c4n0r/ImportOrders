@@ -7,7 +7,6 @@ import java.util.List;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
-   // @Query("SELECT o FROM Orders o ORDER BY o.Id")
     List<Order> findAllOrderByOrderById();
 }
 

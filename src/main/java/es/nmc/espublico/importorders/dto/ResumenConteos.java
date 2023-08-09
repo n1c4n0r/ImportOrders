@@ -61,5 +61,4 @@ public class ResumenConteos {
     public void setConteoPorOrderPriority(Map<String, Long> conteoPorOrderPriority) {
         this.conteoPorOrderPriority = conteoPorOrderPriority;
     }
-// ... (omitiendo los detalles para mantener el ejemplo simple)
 }
