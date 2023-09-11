@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 @AutoConfigureMockMvc
 
-public class OrderServiceTest {
+class OrderServiceTest {
 
     @InjectMocks
     private OrderServiceImpl orderService;
@@ -50,7 +50,7 @@ public class OrderServiceTest {
     private MockMvc  mockMvc;
 
     @Test
-    public void testProcessOrdersInBatch() {
+     void testProcessOrdersInBatch() {
         List<OrderDTO> orderDTOs = UtilTest.getDataOrderDto();
 
         List<Order> mockOrders = orderDTOs.stream()
@@ -65,7 +65,7 @@ public class OrderServiceTest {
         Assertions.assertNotNull(result);
     }
     @Test
-    public void testProcessOrdersInBatch_DataAccessException() throws InterruptedException, ExecutionException, TimeoutException {
+     void testProcessOrdersInBatch_DataAccessException() throws InterruptedException, ExecutionException, TimeoutException {
         // Configuración del comportamiento esperado para lanzar DataAccessException
         when(orderRepository.saveAll(any())).thenThrow(new DataAccessException("Simulated DB error") {});
 

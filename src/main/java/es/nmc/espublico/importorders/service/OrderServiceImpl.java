@@ -71,7 +71,7 @@ public class OrderServiceImpl implements OrderService{
 
             return CompletableFuture.completedFuture(result);
         } catch (DataAccessException dae) { //Capturar error para JPA
-            logger.error("Error de acceso a la base de datos", dae);
+            logger.error("Error de acceso a la base de datos" + "URL: ", dae);
             return CompletableFuture.completedFuture(new ResumenConteos());
         } catch (NullPointerException ne) {
             logger.error("No hay información para persistir en la base de datos", ne);

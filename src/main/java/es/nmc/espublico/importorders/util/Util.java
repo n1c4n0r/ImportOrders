@@ -9,7 +9,9 @@ import java.util.Date;
 
 public class Util {
     private static final Logger logger = LoggerFactory.getLogger(Util.class);
-
+    private Util() {
+        // Constructor privado para evitar instanciación
+    }
     public static Date convertStringDDMMYYYYtoDate(String dateString){
         SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
         Date date = new Date();

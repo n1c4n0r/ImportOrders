@@ -28,7 +28,7 @@ import static org.mockito.Mockito.*;
 @ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
-public class OrderControllerTest {
+class OrderControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -42,7 +42,7 @@ public class OrderControllerTest {
     private static final String MENSAJE = "Se han procesado y guardado en la base de datos 0 órdenes.";
 
     @Test
-    public void testImportOrders_Success() throws Exception {
+    void testImportOrders_Success() throws Exception {
         // Simulamos una respuesta exitosa del servicio REST
         ResponseEntity<PageOrderDTO> responseEntity = new ResponseEntity<>(new PageOrderDTO(), HttpStatus.OK);
         when(restTemplate.exchange(anyString(), any(), any(), eq(PageOrderDTO.class)))
@@ -67,7 +67,7 @@ public class OrderControllerTest {
     }
 
     @Test
-    public void testImportOrders_Failure() throws Exception {
+    void testImportOrders_Failure() throws Exception {
         // Simulamos una excepción al llamar al servicio REST
         when(restTemplate.exchange(anyString(), any(), any(), eq(PageOrderDTO.class)))
                 .thenThrow(new RuntimeException("Error en el servicio REST"));
